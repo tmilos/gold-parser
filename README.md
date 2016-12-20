@@ -1,7 +1,8 @@
 # Gold Parser
 
-Gold parser PHP runtime LALR engine and compiled grammar loader. For more information about Gold Parser check their
-[website](http://www.goldparser.org/).
+Gold parser PHP runtime LALR engine and compiled grammar loader. For more information check 
+[Gold Parser website](http://www.goldparser.org/). Library is written based on 
+the [Calitha C# GOLD Parser Engine](http://www.calitha.com/goldparser.html).
 
 [![Author](http://img.shields.io/badge/author-@tmilos-blue.svg?style=flat-square)](https://twitter.com/tmilos77)
 [![Build Status](https://travis-ci.org/tmilos/gold-parser.svg?branch=master)](https://travis-ci.org/tmilos/gold-parser)
