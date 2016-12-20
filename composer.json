@@ -1,0 +1,35 @@
+{
+    "name": "tmilos/gold-parser",
+    "description": "Golder parser PHP runtime LALR engine and compiled grammar loader",
+    "keywords": ["gold parser", "LALR parser", "compiled grammar"],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Milos Tomic",
+            "email": "tmilos@gmail.com",
+            "homepage": "https://github.com/tmilos/",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Tests\\Tmilos\\GolderParser\\": "tests/",
+            "Tmilos\\GoldParser\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=5.6.1",
+        "tmilos/value": "^1.0",
+        "symfony/event-dispatcher": "^2.0|^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.8|~5.6",
+        "satooshi/php-coveralls": "~1.0"
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
+    "prefer-stable": true,
+    "minimum-stability": "stable"
+}
