@@ -45,7 +45,8 @@ class DFAStateRecord
         if (($record->getEntries()->count() - 5) % 3 !== 0) {
             throw new \RuntimeException('Invalid number of entries for edges in DFA state');
         }
-        for ($i = 5; $i < $record->getEntries()->count(); $i += 3) {
+        $count = $record->getEntries()->count();
+        for ($i = 5; $i < $count; $i += 3) {
             $this->edgeSubRecords[] = new EdgeSubRecord($record->getEntries()->item($i)->toIntValue(), $record->getEntries()->item($i + 1)->toIntValue());
         }
     }

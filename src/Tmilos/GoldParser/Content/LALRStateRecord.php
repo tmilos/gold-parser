@@ -36,7 +36,8 @@ class LALRStateRecord
         if (($record->getEntries()->count() - 3) % 4 !== 0) {
             throw new \RuntimeException('Invalid number of entries for actions in LALR state');
         }
-        for ($i = 3; $i < $record->getEntries()->count(); $i += 4) {
+        $count = $record->getEntries()->count();
+        for ($i = 3; $i < $count; $i += 4) {
             $this->subActions[] = new ActionSubRecord(
                 $record->getEntries()->item($i)->toIntValue(),
                 $record->getEntries()->item($i + 1)->toIntValue(),

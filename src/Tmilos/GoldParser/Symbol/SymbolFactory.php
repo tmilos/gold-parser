@@ -33,7 +33,7 @@ class SymbolFactory
                 return new SymbolWhiteSpace($record->getIndex());
                 break;
             case 3:
-                return SymbolCollection::Eof();
+                return SymbolCollection::eof();
                 break;
             case 4:
                 return new SymbolCommentStart($record->getIndex());
@@ -45,7 +45,7 @@ class SymbolFactory
                 return new SymbolCommentLine($record->getIndex());
                 break;
             case 7:
-                return SymbolCollection::Error();
+                return SymbolCollection::error();
                 break;
             default:
                 return new SymbolError(-1);

@@ -39,7 +39,8 @@ class RuleRecord
         $this->nonTerminal = $record->getEntries()->item(2)->toIntValue();
         //skip reserved empty entry
         $this->symbols = [];
-        for ($i = 4; $i < $record->getEntries()->count(); ++$i) {
+        $count = $record->getEntries()->count();
+        for ($i = 4; $i < $count; ++$i) {
             $this->symbols[] = $record->getEntries()->item($i)->toIntValue();
         }
     }

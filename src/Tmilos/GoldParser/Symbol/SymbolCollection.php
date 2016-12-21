@@ -19,7 +19,7 @@ class SymbolCollection implements \Countable, \IteratorAggregate
     /**
      * @return SymbolEnd
      */
-    public static function Eof()
+    public static function eof()
     {
         static $value = null;
         if (!$value) {
@@ -32,7 +32,7 @@ class SymbolCollection implements \Countable, \IteratorAggregate
     /**
      * @return SymbolError
      */
-    public static function Error()
+    public static function error()
     {
         static $value = null;
         if (!$value) {

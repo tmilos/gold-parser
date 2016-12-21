@@ -27,7 +27,7 @@ interface DfaInterface
      *
      * @return State|null
      */
-    public function GotoNext($char);
+    public function gotoNext($char);
 
     /**
      * The current state in the DFA.

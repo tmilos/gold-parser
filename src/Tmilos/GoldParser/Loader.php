@@ -127,7 +127,7 @@ class Loader
     public function createNewTokenizer()
     {
         $startState = $this->dfaStates->item($this->content->getInitialStatesRecord()->getDfa());
-        $dfa = new Dfa\Dfa($this->dfaStates, $startState);
+        $dfa = new Dfa\Dfa($startState);
 
         return new StringTokenizer($dfa);
     }
@@ -138,7 +138,6 @@ class Loader
 
         return new LalrParser(
             $this->createNewTokenizer(),
-            $this->parserStates,
             $startState,
             $this->symbols
         );

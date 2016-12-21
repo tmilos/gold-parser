@@ -13,9 +13,6 @@ namespace Tmilos\GoldParser\Dfa;
 
 class Dfa implements DfaInterface
 {
-    /** @var StateCollection */
-    private $states;
-
     /** @var State */
     private $startState;
 
@@ -23,12 +20,10 @@ class Dfa implements DfaInterface
     private $currentState;
 
     /**
-     * @param StateCollection $states
      * @param State           $startState
      */
-    public function __construct(StateCollection $states, State $startState)
+    public function __construct(State $startState)
     {
-        $this->states = $states;
         $this->startState = $startState;
         $this->currentState = $startState;
     }
@@ -38,7 +33,7 @@ class Dfa implements DfaInterface
         $this->currentState = $this->startState;
     }
 
-    public function GotoNext($char)
+    public function gotoNext($char)
     {
         $transition = $this->currentState->getTransitions()->find($char);
         if ($transition) {

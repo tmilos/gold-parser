@@ -27,7 +27,6 @@ use Tmilos\GoldParser\Lalr\GotoAction;
 use Tmilos\GoldParser\Lalr\ReduceAction;
 use Tmilos\GoldParser\Lalr\ShiftAction;
 use Tmilos\GoldParser\Lalr\State;
-use Tmilos\GoldParser\Lalr\StateCollection;
 use Tmilos\GoldParser\Lalr\StateStack;
 use Tmilos\GoldParser\Symbol\SymbolCollection;
 use Tmilos\GoldParser\Symbol\SymbolCommentEnd;
@@ -39,7 +38,6 @@ use Tmilos\GoldParser\Symbol\SymbolNonTerminal;
 use Tmilos\GoldParser\Symbol\SymbolWhiteSpace;
 use Tmilos\GoldParser\Tokenizer\NonTerminalToken;
 use Tmilos\GoldParser\Tokenizer\TerminalToken;
-use Tmilos\GoldParser\Tokenizer\Token;
 use Tmilos\GoldParser\Tokenizer\Tokenizer;
 use Tmilos\GoldParser\Tokenizer\TokenStack;
 
@@ -47,9 +45,6 @@ class LalrParser
 {
     /** @var Tokenizer */
     private $tokenizer;
-
-    /** @var StateCollection */
-    private $states;
 
     /** @var State */
     private $startState;
@@ -86,14 +81,12 @@ class LalrParser
 
     /**
      * @param Tokenizer        $tokenizer
-     * @param StateCollection  $states
      * @param State            $startState
      * @param SymbolCollection $symbols
      */
-    public function __construct(Tokenizer $tokenizer, StateCollection $states, State $startState, SymbolCollection $symbols)
+    public function __construct(Tokenizer $tokenizer, State $startState, SymbolCollection $symbols)
     {
         $this->tokenizer = $tokenizer;
-        $this->states = $states;
         $this->startState = $startState;
         $this->symbols = $symbols;
         $this->storeTokens = StoreTokensMode::NO_USER_OBJECT();
@@ -209,7 +202,7 @@ class LalrParser
         $this->tokenizer->setInput($input);
         while ($this->continueParsing) {
             $token = $this->getLookAhead();
-            if ($token != null) {
+            if ($token) {
                 $this->parseTerminal($token);
             }
         }
@@ -234,9 +227,9 @@ class LalrParser
         if ($action instanceof ShiftAction) {
             $this->doShift($token, $action);
         } elseif ($action instanceof ReduceAction) {
-            $this->doReduce($token, $action);
+            $this->doReduce($action);
         } elseif ($action instanceof AcceptAction) {
-            $this->doAccept($token, $action);
+            $this->doAccept();
         } else {
             $this->continueParsing = false;
             $this->fireParseError($token);
@@ -251,7 +244,7 @@ class LalrParser
         $this->eventDispatcher->dispatch(Events::SHIFT, new ShiftEvent($token, $action->getState()));
     }
 
-    private function doReduce(Token $token, ReduceAction $action)
+    private function doReduce(ReduceAction $action)
     {
         $rhs = $action->getRule()->getRhs();
         $reduceLength = count($rhs);
@@ -278,13 +271,13 @@ class LalrParser
 
         $gotoAction = $currentState->getActions()->item($action->getRule()->getLhs());
         if ($gotoAction instanceof GotoAction) {
-            $this->doGoto($token, $gotoAction);
+            $this->doGoto($gotoAction);
         } else {
             throw new \RuntimeException('Invalid action table in state');
         }
     }
 
-    private function doAccept(Token $token, AcceptAction $action)
+    private function doAccept()
     {
         $this->continueParsing = false;
         $this->accepted = true;
@@ -296,7 +289,7 @@ class LalrParser
         }
     }
 
-    private function doGoto(Token $token, GotoAction $action)
+    private function doGoto(GotoAction $action)
     {
         $this->stateStack->push($action->getState());
         $this->eventDispatcher->dispatch(Events::GOTO_EVENT, new GotoEvent($action->getSymbol(), $this->stateStack->peek()));
@@ -305,7 +298,7 @@ class LalrParser
     private function doReleaseTokens(NonTerminalToken $token)
     {
         if (StoreTokensMode::NEVER()->equals($this->storeTokens) ||
-            (StoreTokensMode::NO_USER_OBJECT()->equals($this->storeTokens) && $token->getUserObject() != null)
+            (StoreTokensMode::NO_USER_OBJECT()->equals($this->storeTokens) && $token->getUserObject())
         ) {
             $token->clearTokens();
         }
@@ -316,22 +309,22 @@ class LalrParser
      */
     private function getLookAhead()
     {
-        if ($this->lookAhead != null) {
+        if ($this->lookAhead) {
             return $this->lookAhead;
         }
 
         do {
             $token = $this->tokenizer->retrieveToken();
             if ($token->getSymbol() instanceof SymbolCommentLine) {
-                if (!$this->processCommentLine($token)) {
+                if (!$this->processCommentLine()) {
                     $this->continueParsing = false;
                 }
             } elseif ($token->getSymbol() instanceof SymbolCommentStart) {
-                if (!$this->processCommentStart($token)) {
+                if (!$this->processCommentStart()) {
                     $this->continueParsing = false;
                 }
             } elseif ($token->getSymbol() instanceof SymbolWhiteSpace) {
-                if (!$this->processWhiteSpace($token)) {
+                if (!$this->processWhiteSpace()) {
                     $this->continueParsing = false;
                 }
             } elseif ($token->getSymbol() instanceof SymbolError) {
@@ -345,9 +338,9 @@ class LalrParser
             if (!$this->continueParsing) {
                 break;
             }
-        } while ($this->lookAhead == null);
+        } while (!$this->lookAhead);
 
-        if ($this->lookAhead != null) {
+        if ($this->lookAhead) {
             $event = new TokenReadEvent($this->lookAhead);
             $this->eventDispatcher->dispatch(Events::TOKEN_READ, $event);
             if (!$event->isContinue()) {
@@ -359,19 +352,16 @@ class LalrParser
         return $this->lookAhead;
     }
 
-    protected function processWhiteSpace(TerminalToken $token)
+    private function processWhiteSpace()
     {
         return true;
     }
 
     /**
-     * @param TerminalToken $token
-     *
      * @return bool
      */
-    protected function processCommentStart(TerminalToken $token)
+    private function processCommentStart()
     {
-        // return (SkipAfterCommentEnd() != null);
         $commentDepth = 1;
         $token = null;
         while ($commentDepth > 0) {
@@ -394,11 +384,9 @@ class LalrParser
     }
 
     /**
-     * @param TerminalToken $token
-     *
      * @return bool
      */
-    protected function processCommentLine(TerminalToken $token)
+    private function processCommentLine()
     {
         // skip to end of line
         $result = $this->tokenizer->skipAfterChar("\n");
@@ -414,7 +402,7 @@ class LalrParser
      *
      * @return bool
      */
-    protected function processError(TerminalToken $token)
+    private function processError(TerminalToken $token)
     {
         $event = new TokenErrorEvent($token);
         $this->eventDispatcher->dispatch(Events::TOKEN_ERROR, $event);
@@ -425,7 +413,7 @@ class LalrParser
     /**
      * @return SymbolCollection
      */
-    protected function findExpectedTokens()
+    private function findExpectedTokens()
     {
         $symbols = new SymbolCollection();
         $state = $this->stateStack->peek();
@@ -438,24 +426,24 @@ class LalrParser
         return $symbols;
     }
 
-    protected function fireEofError()
+    private function fireEofError()
     {
         $eofToken = new TerminalToken(
-            SymbolCollection::Eof(),
-            SymbolCollection::Eof()->getName(),
+            SymbolCollection::eof(),
+            SymbolCollection::eof()->getName(),
             $this->tokenizer->getCurrentLocation()
         );
 
         $this->fireParseError($eofToken);
     }
 
-    protected function fireParseError(TerminalToken $token)
+    private function fireParseError(TerminalToken $token)
     {
         $event = new ParseErrorEvent($token, $this->findExpectedTokens());
         $this->eventDispatcher->dispatch(Events::PARSE_ERROR, $event);
         $this->continueParsing = ContinueMode::STOP()->equals($event->getContinue());
         $this->lookAhead = $event->getNextToken();
-        if ($event->getNextToken() != null && ContinueMode::INSERT()->equals($event->getContinue())) {
+        if ($event->getNextToken() && ContinueMode::INSERT()->equals($event->getContinue())) {
             $this->tokenizer->setCurrentLocation($token->getLocation());
         }
     }

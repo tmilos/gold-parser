@@ -58,26 +58,26 @@ class StringTokenizer implements Tokenizer
         $acceptInfo = null;
 
         if ($this->input->getPosition() >= strlen($this->input->getText())) {
-            return new TerminalToken(SymbolCollection::Eof(), SymbolCollection::Eof()->getName(), $startLocation);
+            return new TerminalToken(SymbolCollection::eof(), SymbolCollection::eof()->getName(), $startLocation);
         }
 
-        $newState = $this->dfa->GotoNext($this->input->readChar());
-        while ($newState != null) {
+        $newState = $this->dfa->gotoNext($this->input->readChar());
+        while ($newState) {
             if ($newState instanceof EndState) {
                 $acceptInfo = new AcceptInfo($newState, Location::copy($this->input->getLocation()));
             }
             if ($this->input->isEof()) {
                 $newState = null;
             } else {
-                $newState = $this->dfa->GotoNext($this->input->readChar());
+                $newState = $this->dfa->gotoNext($this->input->readChar());
             }
         }
 
-        if ($acceptInfo == null) {
+        if (!$acceptInfo) {
             $len = $this->input->getPosition() - $startLocation->getPosition();
             $text = substr($this->input->getText(), $startLocation->getPosition(), $len);
 
-            return new TerminalToken(SymbolCollection::Error(), $text, $startLocation);
+            return new TerminalToken(SymbolCollection::error(), $text, $startLocation);
         } else {
             $this->input->setLocation($acceptInfo->getLocation());
             $len = $acceptInfo->getLocation()->getPosition() - $startLocation->getPosition();
