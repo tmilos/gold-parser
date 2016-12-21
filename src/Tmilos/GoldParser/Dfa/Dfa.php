@@ -20,7 +20,7 @@ class Dfa implements DfaInterface
     private $currentState;
 
     /**
-     * @param State           $startState
+     * @param State $startState
      */
     public function __construct(State $startState)
     {
